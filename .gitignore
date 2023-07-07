@@ -1,0 +1,11 @@
+# Ignore files related to API keys
+.env
+# Generated files
+**/debug/
+**/target/
+**/Cargo.lock
+**/*.rs.bk
+
+**/.vscode
+
+**/out/

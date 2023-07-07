@@ -1,0 +1,22 @@
+[package]
+name = "sway-on-the-playground"
+description = "A cargo-generate template for Rust + Sway integration testing."
+version = "0.1.0"
+edition = "2021"
+authors = ["0xbadc0de"]
+license = "Apache-2.0"
+
+[dev-dependencies]
+fuels = { version = "0.38.0", features = ["fuel-core-lib"] }
+tokio = { version = "1.12", features = ["rt", "macros"] }
+
+[dependencies]
+dotenv = "0.15.0"
+rand = "0.8.5"
+reqwest = "0.11.13"
+hex = "0.4.3"
+
+[[test]]
+harness = true
+name = "integration_tests"
+path = "tests/harness.rs"

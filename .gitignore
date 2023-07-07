@@ -5,7 +5,7 @@
 **/target/
 **/Cargo.lock
 **/*.rs.bk
-
+**/notes/
 **/.vscode
 
 **/out/

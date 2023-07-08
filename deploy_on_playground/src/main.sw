@@ -19,10 +19,9 @@ abi WalletContract {
     #[storage(read)]
     fn read_balance() -> u64;
 
-    #[payable, storage(read, write)]
+    #[storage(read, write), payable]
     fn receive_funds();
 
-    // ANCHOR: send_funds
     #[storage(read, write)]
     fn send_funds_addr(amount_to_send: u64, recipient_address: Address);
 
@@ -31,8 +30,8 @@ abi WalletContract {
 
 }
 
-// add your owners hex encoded address here:
-const OWNER_ADDRESS = Address::from(0x... owner address goes here);
+// add your owners hex encoded address here (with the 0x this time):
+// const OWNER_ADDRESS = Address::from(0x0000000000000000000000000000000000000000000000000000000000000000);
 
 storage {
     balance: u64 = 0,
@@ -58,7 +57,7 @@ impl WalletContract for Contract {
        bal
     }
 
-    #[payable, storage(read, write)]
+    #[storage(read, write), payable]
     fn receive_funds() {
         if msg_asset_id() == BASE_ASSET_ID {
             storage.balance += msg_amount();

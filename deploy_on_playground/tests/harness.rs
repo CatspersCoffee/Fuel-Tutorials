@@ -26,21 +26,21 @@ async fn convert_fuel_address_to_hex(){
         Err(error) => panic!("❌ Problem creating provider: {:#?}", error),
     };
     dotenv().ok();
-    let secret0 = match std::env::var("SECRET0") {
+    let secret0 = match std::env::var("OWNER_SECRET_KEY") {
         Ok(s) => s,
-        Err(error) => panic!("❌ Cannot find SECRET0 in .env file: {:#?}", error),
+        Err(error) => panic!("❌ Cannot find OWNER_SECRET_KEY in .env file: {:#?}", error),
     };
     let wallet0 = WalletUnlocked::new_from_private_key(
         SecretKey::from_str(&secret0).unwrap(), Some(_provider.clone()));
-    let secret1 = match std::env::var("SECRET1") {
+    let secret1 = match std::env::var("ALICE_SECRET_KEY") {
         Ok(s) => s,
-        Err(error) => panic!("❌ Cannot find SECRET1 in .env file: {:#?}", error),
+        Err(error) => panic!("❌ Cannot find ALICE_SECRET_KEY in .env file: {:#?}", error),
     };
     let wallet1 = WalletUnlocked::new_from_private_key(
         SecretKey::from_str(&secret1).unwrap(), Some(_provider.clone()));
-    let secret2 = match std::env::var("SECRET2") {
+    let secret2 = match std::env::var("BOB_SECRET_KEY") {
         Ok(s) => s,
-        Err(error) => panic!("❌ Cannot find SECRET2 in .env file: {:#?}", error),
+        Err(error) => panic!("❌ Cannot find BOB_SECRET_KEY in .env file: {:#?}", error),
     };
     let wallet2 = WalletUnlocked::new_from_private_key(
         SecretKey::from_str(&secret2).unwrap(), Some(_provider.clone()));
@@ -48,10 +48,10 @@ async fn convert_fuel_address_to_hex(){
     println!("Owner address:");
     println!("\tbech32 \t: {}", wallet0.address().to_string());
     println!("\t0x     \t: {}\n", Address::from(wallet0.address()));
-    println!("User1 address:");
+    println!("Alice address:");
     println!("\tbech32 \t: {}", wallet1.address().to_string());
     println!("\t0x     \t: {}\n", Address::from(wallet1.address()));
-    println!("User2 address:");
+    println!("Bob address:");
     println!("\tbech32 \t: {}", wallet2.address().to_string());
     println!("\t0x     \t: {}\n", Address::from(wallet2.address()));
 
@@ -61,9 +61,9 @@ async fn convert_fuel_address_to_hex(){
 async fn get_node_wallets(_p: &Provider) -> Vec<WalletUnlocked> {
     // get the private key for the SECRETX from the .env file in the project root dir:
     let mut wallets: Vec<WalletUnlocked> = Vec::new();
-    wallets.push(get_wallet_from_env("SECRET0", _p.clone()));
-    wallets.push(get_wallet_from_env("SECRET1", _p.clone()));
-    wallets.push(get_wallet_from_env("SECRET2", _p.clone()));
+    wallets.push(get_wallet_from_env("OWNER_SECRET_KEY", _p.clone()));
+    wallets.push(get_wallet_from_env("ALICE_SECRET_KEY", _p.clone()));
+    wallets.push(get_wallet_from_env("BOB_SECRET_KEY", _p.clone()));
     wallets
 }
 
@@ -78,10 +78,10 @@ async fn print_wallet_balances(_p: &Provider) {
     println!("Owner address (hex) \t: 0x{}", Address::from(wallet0.address()));
     println!("ETH: {:#?}", balance_base_w0 );
     println!("");
-    println!("User1 address (hex) \t: 0x{}", Address::from(wallet1.address()));
+    println!("Alice address (hex) \t: 0x{}", Address::from(wallet1.address()));
     println!("ETH: {:#?}", balance_base_w1 );
     println!("");
-    println!("User2 address (hex) \t: 0x{}", Address::from(wallet2.address()));
+    println!("Bob address (hex) \t: 0x{}", Address::from(wallet2.address()));
     println!("ETH: {:#?}", balance_base_w2 );
     println!("");
 }
@@ -116,7 +116,7 @@ async fn print_balances(){
     println!("Contract ID (hex)    \t= {}", cid.to_string());
     println!("Contract ID (bech32) \t= {}", ca_bech32.to_string());
 
-    let owner_wallet = get_wallet_from_env("SECRET0", provider.clone());
+    let owner_wallet = get_wallet_from_env("OWNER_SECRET_KEY", provider.clone());
     let contract_instance = MyContract::new(_contract_id.into(), owner_wallet);
     let contract_balances = contract_instance.get_balances().await;
     println!("\nAll Contract balances : {:#?}", contract_balances );
@@ -185,15 +185,14 @@ async fn deploy_and_ret_wallets_instances() -> (Vec<MyContract>, Vec<WalletUnloc
     contract_instances.push(contract_instance2);
     contract_instances.push(contract_instance1);
     contract_instances.push(contract_instance0);
-
     (contract_instances, wallets)
 }
 
 #[tokio::test]
 async fn deploy() {
-    let (_con_insts, _wals) = deploy_and_ret_wallets_instances().await;
+    // uncomment to sue this function to deploy.
+    //let (_con_insts, _wals) = deploy_and_ret_wallets_instances().await;
 }
-
 
 
 //--------------------------------------------------------------------------
@@ -225,7 +224,7 @@ async fn initalize_contract_balance() {
     println!("Contract ID \t= {}", Address::from(*_contract_id.clone()));
 
     // get the owners secret key/wallet
-    let owner_wallet = get_wallet_from_env("SECRET0", provider.clone());
+    let owner_wallet = get_wallet_from_env("OWNER_SECRET_KEY", provider.clone());
 
     let contract_instance = MyContract::new(_contract_id.into(), owner_wallet);
     let tx_params = TxParameters::default()
@@ -265,17 +264,15 @@ async fn read_contract_storage_and_asset_balances() {
         Ok(s) => s,
         Err(error) => panic!("❌ Cannot find .env file: {:#?}", error),
     };
-    // println!("cid         = {}", cid.to_string());
 
     let _contract_id: ContractId =
         cid.to_string()
         .parse()
         .expect("Invalid ID");
-
-    // println!("contract id = {}", Address::from(*_contract_id.clone()));
+    println!("Contract id = {}", Address::from(*_contract_id.clone()));
 
     // get user wallet
-    let user1_wallet = get_wallet_from_env("SECRET1", provider.clone());
+    let user1_wallet = get_wallet_from_env("ALICE_SECRET_KEY", provider.clone());
 
     let contract_instance = MyContract::new(_contract_id.into(), user1_wallet);
 
@@ -291,12 +288,9 @@ async fn read_contract_storage_and_asset_balances() {
         .call()
         .await;
     println!("{} read_balance (on {})", if result.is_ok() { "✅" } else { "❌" }, RPC.to_string());
-
     println!("read storage.balance value = {}", result.unwrap().value);
-
     let contract_balances = contract_instance.get_balances().await;
     println!("\nAll contract balances : {:#?}", contract_balances );
-
 
 }
 
@@ -304,7 +298,7 @@ async fn read_contract_storage_and_asset_balances() {
 /// # Send into contract using receive_funds
 ///
 #[tokio::test]
-async fn send_from_user1_to_contract() {
+async fn send_from_alice_to_contract() {
     println!("Send into contract using receive_funds:");
 
     let provider = match Provider::connect(RPC).await {
@@ -317,26 +311,20 @@ async fn send_from_user1_to_contract() {
         Ok(s) => s,
         Err(error) => panic!("❌ Cannot find .env file: {:#?}", error),
     };
-    println!("cid         = {}", cid.to_string());
 
     let _contract_id: ContractId =
         cid.to_string()
         .parse()
         .expect("Invalid ID");
-    println!("contract id = {}", Address::from(*_contract_id.clone()));
-
-    // let ca_hex = Address::from(*_contract_id.clone());
-    // let ca_bech32 = Bech32Address::from(ca_hex);
-
+    println!("Contract id = {}", Address::from(*_contract_id.clone()));
 
     //------------------------------------
-    // get user1 wallet
-    let user1_wallet = get_wallet_from_env("SECRET1", provider.clone());
+    // get Alice wallet
+    let user1_wallet = get_wallet_from_env("ALICE_SECRET_KEY", provider.clone());
 
     println!("---------------------------------------------------------------------------");
     let wal1_base_bal_start = user1_wallet.clone().get_asset_balance(&BASE_ASSET_ID).await.unwrap();
-    println!("User1 ETH balance before \t= {}", wal1_base_bal_start );
-    println!("---------------------------------------------------------------------------");
+    println!("Alice ETH balance before \t= {}", wal1_base_bal_start );
 
     let contract_instance = MyContract::new(_contract_id.into(), user1_wallet.clone());
     let tx_params = TxParameters::default()
@@ -345,7 +333,8 @@ async fn send_from_user1_to_contract() {
         .set_maturity(0);
     //let tx_params = TxParameters::default();
 
-    let deposit_amount = 1_000_005;
+    // let deposit_amount = 2_000_005;
+    let deposit_amount = 499_999_000;
 
     let call_params = CallParameters::default()
         .set_amount(deposit_amount)
@@ -364,28 +353,27 @@ async fn send_from_user1_to_contract() {
         Err(error) => panic!("Problem calling contract () --> {:#?}", error),
     };
 
-    println!("gas used in tx \t= {}", response.gas_used);
+    println!("\nGas used in tx \t= {}\n", response.gas_used);
 
-    println!("---------------------------------------------------------------------------");
     let wal1_base_bal_end = user1_wallet.get_asset_balance(&BASE_ASSET_ID).await.unwrap();
-    println!("User1 ETH balance after \t= {}", wal1_base_bal_end );
+    println!("Alice ETH balance after \t= {}", wal1_base_bal_end );
     println!("---------------------------------------------------------------------------");
 
 
 }
 
 ///
-/// # Send base_asset to User2 using Identity
+/// # Send base_asset to Bob using Identity
+/// Input Bobs hex encoded public key.
 ///
 #[tokio::test]
-async fn send_base_asset_to_user2_using_identity() {
-    println!("Send base_asset to User2 using Identity:");
+async fn send_base_asset_to_bob_using_identity() {
+    println!("Send base_asset to Bob using Identity:");
 
     let provider = match Provider::connect(RPC).await {
         Ok(p) => p,
         Err(error) => panic!("❌ Problem creating provider: {:#?}", error),
     };
-
 
     dotenv().ok();
     let cid = match std::env::var("CONTRACTID") {
@@ -399,7 +387,7 @@ async fn send_base_asset_to_user2_using_identity() {
 
     println!("contract ID = {}", Address::from(*_contract_id.clone()));
 
-    let owner_wallet = get_wallet_from_env("SECRET0", provider);
+    let owner_wallet = get_wallet_from_env("OWNER_SECRET_KEY", provider);
     let contract_instance = MyContract::new(_contract_id.into(), owner_wallet);
 
     let tx_params = TxParameters::default()
@@ -407,12 +395,11 @@ async fn send_base_asset_to_user2_using_identity() {
         .set_gas_limit(1_000_000)
         .set_maturity(0);
 
-
     //-------------------------------------------------------------
     // Address for the recipient (remove the 0x)
 
     let recipient_base_layer_address =
-    Address::from_str("9a58e07905f7a01e3787a89a451b48144bb9d3d6f725402c89a18fd7f6033c6d")
+    Address::from_str("3ea052590cf8c1b91361e997685972332c8925bb96dd2b8bb9ca2f9c03d33645")
         .expect("Invalid address.");
 
     let to_identity = Identity::Address(recipient_base_layer_address.into());
@@ -453,17 +440,17 @@ async fn send_base_asset_to_user2_using_identity() {
 }
 
 ///
-/// # Send base_asset to User2 using Address
+/// # Send base_asset to Bob using Address
+/// Input Bobs hex encoded public key.
 ///
 #[tokio::test]
-async fn send_base_asset_to_user2_using_address() {
-    println!("Send base_asset to User2 using Address:");
+async fn send_base_asset_to_bob_using_address() {
+    println!("Send base_asset to Bob using Address:");
 
     let provider = match Provider::connect(RPC).await {
         Ok(p) => p,
         Err(error) => panic!("❌ Problem creating provider: {:#?}", error),
     };
-
 
     dotenv().ok();
     let cid = match std::env::var("CONTRACTID") {
@@ -477,7 +464,7 @@ async fn send_base_asset_to_user2_using_address() {
 
     println!("contract ID = {}", Address::from(*_contract_id.clone()));
 
-    let owner_wallet = get_wallet_from_env("SECRET0", provider);
+    let owner_wallet = get_wallet_from_env("OWNER_SECRET_KEY", provider);
     let contract_instance = MyContract::new(_contract_id.into(), owner_wallet);
 
     let tx_params = TxParameters::default()
@@ -485,12 +472,11 @@ async fn send_base_asset_to_user2_using_address() {
         .set_gas_limit(1_000_000)
         .set_maturity(0);
 
-
     //-------------------------------------------------------------
     // Address for the recipient (remove the 0x)
 
     let recipient_base_layer_address =
-    Address::from_str("9a58e07905f7a01e3787a89a451b48144bb9d3d6f725402c89a18fd7f6033c6d")
+    Address::from_str("3ea052590cf8c1b91361e997685972332c8925bb96dd2b8bb9ca2f9c03d33645")
         .expect("Invalid address.");
 
     let result = contract_instance

@@ -12,7 +12,7 @@ const RPC: &str = "beta-3.fuel.network";
 
 // Load abi from json
 abigen!(Contract(
-    name = "MyContract",
+    name = "WalletContract",
     abi = "out/debug/basic_wallet_contract-abi.json"
 ));
 
@@ -117,7 +117,7 @@ async fn print_balances(){
     println!("Contract ID (bech32) \t= {}", ca_bech32.to_string());
 
     let owner_wallet = get_wallet_from_env("OWNER_SECRET_KEY", provider.clone());
-    let contract_instance = MyContract::new(_contract_id.into(), owner_wallet);
+    let contract_instance = WalletContract::new(_contract_id.into(), owner_wallet);
     let contract_balances = contract_instance.get_balances().await;
     println!("\nAll Contract balances : {:#?}", contract_balances );
     println!("---------------------------------------------------------------------------\n");
@@ -137,7 +137,7 @@ fn get_wallet_from_env(env_sk: &str, provider: Provider) -> WalletUnlocked {
     wallet
 }
 
-async fn deploy_and_ret_wallets_instances() -> (Vec<MyContract>, Vec<WalletUnlocked>) {
+async fn deploy_and_ret_wallets_instances() -> (Vec<WalletContract>, Vec<WalletUnlocked>) {
 
     let _provider = match Provider::connect(RPC).await {
         Ok(p) => p,
@@ -178,10 +178,10 @@ async fn deploy_and_ret_wallets_instances() -> (Vec<MyContract>, Vec<WalletUnloc
     let bcontract_id: ContractId = contract_id.clone().into();
     println!("contract ID (hex) \t: 0x{}", bcontract_id);
 
-    let contract_instance0 = MyContract::new(contract_id.clone(), wallet0.clone());
-    let contract_instance1 = MyContract::new(contract_id.clone(), wallet1.clone());
-    let contract_instance2 = MyContract::new(contract_id.clone(), wallet2.clone());
-    let mut contract_instances: Vec<MyContract> = Vec::new();
+    let contract_instance0 = WalletContract::new(contract_id.clone(), wallet0.clone());
+    let contract_instance1 = WalletContract::new(contract_id.clone(), wallet1.clone());
+    let contract_instance2 = WalletContract::new(contract_id.clone(), wallet2.clone());
+    let mut contract_instances: Vec<WalletContract> = Vec::new();
     contract_instances.push(contract_instance2);
     contract_instances.push(contract_instance1);
     contract_instances.push(contract_instance0);
@@ -226,7 +226,7 @@ async fn initalize_contract_balance() {
     // get the owners secret key/wallet
     let owner_wallet = get_wallet_from_env("OWNER_SECRET_KEY", provider.clone());
 
-    let contract_instance = MyContract::new(_contract_id.into(), owner_wallet);
+    let contract_instance = WalletContract::new(_contract_id.into(), owner_wallet);
     let tx_params = TxParameters::default()
         .set_gas_price(1)
         .set_gas_limit(1_000_000)
@@ -274,7 +274,7 @@ async fn read_contract_storage_and_asset_balances() {
     // get user wallet
     let user1_wallet = get_wallet_from_env("ALICE_SECRET_KEY", provider.clone());
 
-    let contract_instance = MyContract::new(_contract_id.into(), user1_wallet);
+    let contract_instance = WalletContract::new(_contract_id.into(), user1_wallet);
 
     let tx_params = TxParameters::default()
         .set_gas_price(1)
@@ -295,7 +295,10 @@ async fn read_contract_storage_and_asset_balances() {
 }
 
 ///
-/// # Send into contract using receive_funds
+/// # Alice to send BASE_ASSET into contract.
+///
+/// using the receive_funds() function & signing \
+/// the transaction with Alices secret key.
 ///
 #[tokio::test]
 async fn send_from_alice_to_contract() {
@@ -326,14 +329,13 @@ async fn send_from_alice_to_contract() {
     let wal1_base_bal_start = user1_wallet.clone().get_asset_balance(&BASE_ASSET_ID).await.unwrap();
     println!("Alice ETH balance before \t= {}", wal1_base_bal_start );
 
-    let contract_instance = MyContract::new(_contract_id.into(), user1_wallet.clone());
+    let contract_instance = WalletContract::new(_contract_id.into(), user1_wallet.clone());
     let tx_params = TxParameters::default()
         .set_gas_price(1)
         .set_gas_limit(1_000_000)
         .set_maturity(0);
-    //let tx_params = TxParameters::default();
 
-    // let deposit_amount = 2_000_005;
+    //let deposit_amount = 2_000_005;
     let deposit_amount = 499_999_000;
 
     let call_params = CallParameters::default()
@@ -363,8 +365,23 @@ async fn send_from_alice_to_contract() {
 }
 
 ///
-/// # Send base_asset to Bob using Identity
-/// Input Bobs hex encoded public key.
+/// # Send BASE_ASSET to Bob using Identity
+///
+/// This function will send from the WalletContract using
+/// the owners secret key to sign the transaction, an amount:
+///
+/// amount = 1_000_000
+///
+/// within,
+///
+/// .send_funds_iden(1_000_000, to_identity)
+///
+/// to Bobs Identity constructed from the encoded public key 0x...:
+///
+/// to_identity = Identity::Address(recipient_base_layer_address.into());
+///
+/// recipient_base_layer_address = 0x<Bobs address>
+///
 ///
 #[tokio::test]
 async fn send_base_asset_to_bob_using_identity() {
@@ -388,7 +405,7 @@ async fn send_base_asset_to_bob_using_identity() {
     println!("contract ID = {}", Address::from(*_contract_id.clone()));
 
     let owner_wallet = get_wallet_from_env("OWNER_SECRET_KEY", provider);
-    let contract_instance = MyContract::new(_contract_id.into(), owner_wallet);
+    let contract_instance = WalletContract::new(_contract_id.into(), owner_wallet);
 
     let tx_params = TxParameters::default()
         .set_gas_price(1)
@@ -439,9 +456,23 @@ async fn send_base_asset_to_bob_using_identity() {
 
 }
 
+
 ///
-/// # Send base_asset to Bob using Address
-/// Input Bobs hex encoded public key.
+/// # Send BASE_ASSET to Bob using Address
+///
+/// This function will send from the WalletContract using
+/// the owners secret key to sign the transaction, an amount:
+///
+/// amount = 1_000_000
+///
+/// within,
+///
+/// .send_funds_addr(1_000_000, recipient_base_layer_address)
+///
+/// to Bob hex encoded public key 0x...:
+///
+/// recipient_base_layer_address = 0x<Bobs address>
+///
 ///
 #[tokio::test]
 async fn send_base_asset_to_bob_using_address() {
@@ -465,7 +496,7 @@ async fn send_base_asset_to_bob_using_address() {
     println!("contract ID = {}", Address::from(*_contract_id.clone()));
 
     let owner_wallet = get_wallet_from_env("OWNER_SECRET_KEY", provider);
-    let contract_instance = MyContract::new(_contract_id.into(), owner_wallet);
+    let contract_instance = WalletContract::new(_contract_id.into(), owner_wallet);
 
     let tx_params = TxParameters::default()
         .set_gas_price(1)

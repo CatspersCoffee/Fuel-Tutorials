@@ -30,8 +30,9 @@ abi WalletContract {
 
 }
 
+
 // add your owners hex encoded address here (with the 0x this time):
-// const OWNER_ADDRESS = Address::from(0x0000000000000000000000000000000000000000000000000000000000000000);
+const OWNER_ADDRESS = Address::from(0x0000000000000000000000000000000000000000000000000000000000000000);
 
 storage {
     balance: u64 = 0,

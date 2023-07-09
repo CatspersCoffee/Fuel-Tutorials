@@ -1,7 +1,9 @@
+<p align="center">
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://github.com/CatspersCoffee/Fuel-Tutorials/blob/main/assets/imgs/fuel_banner_readme.png">
   <img alt="title image light / dark." src="https://github.com/CatspersCoffee/Fuel-Tutorials/blob/main/assets/imgs/fuel_banner_readme.png">
 </picture>
+</p>
 
 # Fuel Tutorials
 

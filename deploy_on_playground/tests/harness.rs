@@ -137,6 +137,7 @@ fn get_wallet_from_env(env_sk: &str, provider: Provider) -> WalletUnlocked {
     wallet
 }
 
+#[allow(dead_code)]
 async fn deploy_and_ret_wallets_instances() -> (Vec<WalletContract>, Vec<WalletUnlocked>) {
 
     let _provider = match Provider::connect(RPC).await {
